@@ -867,6 +867,16 @@ static inline CGSize CTFramesetterSuggestFrameSizeForAttributedStringWithConstra
                         [truncationString deleteCharactersInRange:NSMakeRange((NSUInteger)(lastLineRange.length - 1), 1)];
                     }
                 }
+                NSMutableAttributedString *tempTruncationString = [[NSMutableAttributedString alloc] initWithAttributedString:truncationString];
+                [tempTruncationString appendAttributedString:attributedTruncationString];
+                
+                CTLineRef tempTruncationLine = CTLineCreateWithAttributedString((__bridge CFAttributedStringRef)tempTruncationString);
+                CGFloat ascent, descent, leading, width;
+                width = CTLineGetTypographicBounds(tempTruncationLine, &ascent,  &descent, &leading);
+                if(width < rect.size.width) {
+                    [truncationString deleteCharactersInRange:NSMakeRange((NSUInteger)(truncationString.length - attributedTruncationString.length), attributedTruncationString.length)];
+                }
+                
                 [truncationString appendAttributedString:attributedTruncationString];
                 CTLineRef truncationLine = CTLineCreateWithAttributedString((__bridge CFAttributedStringRef)truncationString);
 
@@ -890,6 +900,7 @@ static inline CGSize CTFramesetterSuggestFrameSizeForAttributedStringWithConstra
                     [self addLinkToURL:[attributedTruncationString attribute:NSLinkAttributeName atIndex:0 effectiveRange:&linkRange] withRange:tokenLinkRange];
                 }
 
+                CFRelease(tempTruncationLine);
                 CFRelease(truncatedLine);
                 CFRelease(truncationLine);
                 CFRelease(truncationToken);
